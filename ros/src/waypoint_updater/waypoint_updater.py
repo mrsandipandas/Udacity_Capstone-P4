@@ -27,7 +27,7 @@ class WaypointUpdater(object):
     def __init__(self):
         rospy.init_node('waypoint_updater')
 
-        # TODO: Add other member variables you need below
+        # Member variables
 
         self.base_waypoints = None
         self.pose = None
@@ -35,7 +35,7 @@ class WaypointUpdater(object):
         self.waypoints_2d = None
         self.waypoint_tree = None
 
-        # TODO: Add a subscriber for /traffic_waypoint and /obstacle_waypoint below
+        # Subscribers for /traffic_waypoint and /obstacle_waypoint below
 
         rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
@@ -49,11 +49,11 @@ class WaypointUpdater(object):
         rate = rospy.Rate(50)
         while not rospy.is_shutdown():
             if self.pose and self.base_waypoints:
-                #Get closest waypoint
+                #Publish waypoints at 50Hz
                 self.publish_waypoints()
             rate.sleep()
 
-    def get_closest_waypoint_idx(self):
+    def get_closest_waypoint_id(self):
         x = self.pose.pose.position.x
         y = self.pose.pose.position.y
         closest_idx = self.waypoint_tree.query([x,y],1)[1]
@@ -76,17 +76,13 @@ class WaypointUpdater(object):
     def publish_waypoints(self):
         lane = Lane()
 
-        closest_idx = self.get_closest_waypoint_idx()
+        closest_idx = self.get_closest_waypoint_id()
         farthest_idx = closest_idx + LOOKAHEAD_WPS
         base_waypoints = self.base_waypoints.waypoints[closest_idx:farthest_idx]
       
         if self.stopline_wp_idx == -1 or (self.stopline_wp_idx >= farthest_idx):
-            #rospy.logwarn("publish normal     as stopline is %s and farthest is %s",self.stopline_wp_idx,farthest_idx )
-            #rospy.logwarn("ROSBAG sees GREEN or UNKNOWN") 
             lane.waypoints = base_waypoints
         else:
-            #rospy.logwarn("publish decelerate as stopline is %s and farthest is %s",self.stopline_wp_idx,farthest_idx )
-            #rospy.logwarn("ROSBAG sees RED or YELLOW") 
             lane.waypoints = self.decelerate_waypoints(base_waypoints, closest_idx)
 
         self.final_waypoints_pub.publish(lane)
@@ -119,8 +115,6 @@ class WaypointUpdater(object):
             self.waypoint_tree = KDTree(self.waypoints_2d)
 
     def traffic_cb(self, msg):
-        # TODO: Callback for /traffic_waypoint message. Implement
-        #rospy.logwarn("received traffic %s",msg.data)
         self.stopline_wp_idx = msg.data
 
 
