@@ -97,17 +97,17 @@ class DBWNode(object):
             rate.sleep()
 
     def twist_cb(self, msg):
-        rospy.loginfo("Target twist received")
+        #rospy.loginfo("Target twist received")
         self.linear_vel = msg.twist.linear.x
         self.angular_vel = msg.twist.angular.z
 
     def vel_cb(self, msg):
-        rospy.loginfo("Current twist received")
+        #rospy.loginfo("Current twist received")
         self.curr_vel = msg.twist.linear.x
 
     def dbw_enabled_cb(self, msg):
         self.dbw_enabled = msg
-        rospy.loginfo("dbw_enabled received with value %s", self.dbw_enabled)
+        #rospy.loginfo("dbw_enabled received with value %s", self.dbw_enabled)
 
     def publish(self, throttle, brake, steer):
         tcmd = ThrottleCmd()

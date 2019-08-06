@@ -27,7 +27,7 @@ class Controller(object):
         self.throttle_controller = PID(kp=1.0, ki=0.001, kd=0.10, mn=0.0, mx=0.2)
         self.lowpass_filter      = LowPassFilter(0.15, self.dt)
 
-    # Time 7.08 udacity
+    # Control strategy
     def control(self, curr_vel, dbw_enabled, linear_vel, angular_vel):
         if not dbw_enabled:
             self.throttle_controller.reset()

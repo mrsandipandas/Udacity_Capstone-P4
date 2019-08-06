@@ -87,7 +87,7 @@ class WaypointUpdater(object):
 
         self.final_waypoints_pub.publish(lane)
 
-    def decelerate_waypoints(self,waypoints,closest_idx):
+    def decelerate_waypoints(self, waypoints, closest_idx):
         temp = []
         for i,wp in enumerate(waypoints):
             p = Waypoint()
@@ -116,6 +116,7 @@ class WaypointUpdater(object):
 
     def traffic_cb(self, msg):
         self.stopline_wp_idx = msg.data
+        # rospy.logwarn("Next stop line traffic light: {0}".format(self.stopline_wp_idx))
 
 
     def obstacle_cb(self, msg):
