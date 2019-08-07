@@ -56,11 +56,6 @@ roslaunch launch/styx.launch
 self.simdebug = True
 ```
 
-3. If you want to debug and visualize the image processing results from the ros logs, change `ros/src/tl_detector/tl_detector.py` as follows:
-```
-self.logdebug = True
-```
-
 ### Real world testing
 1. Download [training bag](https://s3-us-west-1.amazonaws.com/udacity-selfdrivingcar/traffic_light_bag_file.zip) that was recorded on the Udacity self-driving car.
 2. Unzip the file
@@ -76,7 +71,10 @@ rosbag play -l traffic_light_bag_file/traffic_light_training.bag
 cd Udacity_Capstone-P4/ros
 roslaunch launch/site.launch
 ```
-5. Confirm that traffic light detection works on real life images
+5. Confirm that traffic light detection works on real life images. If you want to debug and visualize the image processing results from the ros logs, change `ros/src/tl_detector/tl_detector.py` as follows:
+```
+self.logdebug = True
+```
 
 ### Other library/driver information
 Outside of `requirements.txt`, here is information on other driver/library versions used in the simulator and Carla:
