@@ -5,7 +5,7 @@ from tl_color_det_dl import TLColorDetectorDL
 class TLClassifier(object):
 
     def __init__(self, method):
-        self.debug = True
+        self.debug = False
 
         if method == "comp_vision":
             self.model = TLColorDetectorCV(self.debug)
