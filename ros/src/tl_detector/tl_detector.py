@@ -17,7 +17,7 @@ STATE_COUNT_THRESHOLD = 3
 class TLDetector(object):
     def __init__(self):
         rospy.init_node('tl_detector')
-
+        self.has_image = False
         self.pose = None
         self.waypoints = None
         self.camera_image = None
@@ -44,7 +44,9 @@ class TLDetector(object):
         self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
 
         self.bridge = CvBridge()
-        self.light_classifier = TLClassifier()
+        self.light_classifier = TLClassifier("comp_vision")
+        #self.light_classifier = TLClassifier("deepl_learning")
+        
         self.listener = tf.TransformListener()
 
         self.state = TrafficLight.UNKNOWN
@@ -65,41 +67,21 @@ class TLDetector(object):
 
     def traffic_cb(self, msg):
         self.lights = msg.lights
+        
+        # If no image from camera
+        if(not self.has_image):
+            self.publish_upcoming_red_light()
 
-        # TODO: Testing the method
-        '''
-        light_wp, state = self.process_traffic_lights()
-        if self.state != state:
-            self.state_count = 0
-            self.state = state
-        elif self.state_count >= STATE_COUNT_THRESHOLD:
-            self.last_state = self.state
-            light_wp = light_wp if state == TrafficLight.RED else -1
-            self.last_wp = light_wp
-            self.upcoming_red_light_pub.publish(Int32(light_wp))
-        else:
-            self.upcoming_red_light_pub.publish(Int32(self.last_wp))
-        self.state_count += 1   
-        '''
-
-    def image_cb(self, msg):
-        """Identifies red lights in the incoming camera image and publishes the index
-            of the waypoint closest to the red light's stop line to /traffic_waypoint
-
-        Args:
-            msg (Image): image from car-mounted camera
-
+    def publish_upcoming_red_light(self):
         """
-        self.has_image = True
-        self.camera_image = msg
-        light_wp, state = self.process_traffic_lights()
-
-        '''
         Publish upcoming red lights at camera frequency.
         Each predicted state has to occur `STATE_COUNT_THRESHOLD` number
         of times till we start using it. Otherwise the previous stable state is
         used.
-        '''
+        """
+
+        light_wp, state = self.process_traffic_lights()  
+
         if self.state != state:
             self.state_count = 0
             self.state = state
@@ -111,6 +93,19 @@ class TLDetector(object):
         else:
             self.upcoming_red_light_pub.publish(Int32(self.last_wp))
         self.state_count += 1
+
+    def image_cb(self, msg):
+        """Identifies red lights in the incoming camera image and publishes the index
+            of the waypoint closest to the red light's stop line to /traffic_waypoint
+
+        Args:
+            msg (Image): image from car-mounted camera
+
+        """
+        self.has_image = True
+        self.camera_image = msg
+        
+        self.publish_upcoming_red_light()
 
     def get_closest_waypoint(self, x, y):
         """Identifies the closest path waypoint to the given position
@@ -135,19 +130,21 @@ class TLDetector(object):
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
         """
-        # TODO: FIX code here
-        
+        # This part is executed when no image is returned for the simulator 
+        # Then we rely on ground truth data from the simulator for traffic 
+        # light state if available
         if(not self.has_image):
             self.prev_light_loc = None
-            return False
+
+            if light:
+                return light.state    
+            else:
+                return TrafficLight.UNKNOWN     
 
         cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
         
         #Get classification
-        #return self.light_classifier.get_classification(cv_image)
-        
-        # Testing
-        return light.state
+        return self.light_classifier.get_classification(cv_image)
 
     def process_traffic_lights(self):
         """Finds closest visible traffic light, if one exists, and determines its
