@@ -51,9 +51,14 @@ roslaunch launch/styx.launch
 ```
 2. Run the simulator
 
-3. If you want to see the live camera data for debugging, change `ros/src/tl_detector/light_classification/tl_classifier.py` as follows:
+3. If you want to debug and visualize the image processing results from simulator only, change `ros/src/tl_detector/tl_detector.py` as follows:
 ```
-self.debug = True
+self.simdebug = True
+```
+
+3. If you want to debug and visualize the image processing results from the ros logs, change `ros/src/tl_detector/tl_detector.py` as follows:
+```
+self.logdebug = True
 ```
 
 ### Real world testing

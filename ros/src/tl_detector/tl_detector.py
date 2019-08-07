@@ -17,6 +17,10 @@ STATE_COUNT_THRESHOLD = 3
 class TLDetector(object):
     def __init__(self):
         rospy.init_node('tl_detector')
+        
+        self.logdebug = False
+        self.simdebug = False
+        
         self.has_image = False
         self.pose = None
         self.waypoints = None
@@ -24,7 +28,7 @@ class TLDetector(object):
         self.lights = []
         self.waypoint_tree = None
         self.waypoints_2d = None
-
+        
         sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
 
@@ -36,7 +40,7 @@ class TLDetector(object):
         rely on the position of the light and the camera image to predict it.
         '''
         sub3 = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb)
-        sub6 = rospy.Subscriber('/image_color', Image, self.image_cb)
+        sub6 = rospy.Subscriber('/image_raw', Image, self.image_cb)
 
         config_string = rospy.get_param("/traffic_light_config")
         self.config = yaml.load(config_string)
@@ -44,7 +48,10 @@ class TLDetector(object):
         self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
 
         self.bridge = CvBridge()
-        self.light_classifier = TLClassifier("comp_vision")
+
+        debug = self.simdebug or self.logdebug
+
+        self.light_classifier = TLClassifier("comp_vision", debug)
         #self.light_classifier = TLClassifier("deepl_learning")
         
         self.listener = tf.TransformListener()
@@ -68,8 +75,8 @@ class TLDetector(object):
     def traffic_cb(self, msg):
         self.lights = msg.lights
         
-        # If no image from camera
-        if(not self.has_image):
+        # If no image from camera and if not ros bag log debugging
+        if(not self.has_image and not self.logdebug):
             self.publish_upcoming_red_light()
 
     def publish_upcoming_red_light(self):
@@ -105,7 +112,13 @@ class TLDetector(object):
         self.has_image = True
         self.camera_image = msg
         
-        self.publish_upcoming_red_light()
+        # Just see how image processing works without the way points 
+        # for debugging the ros bags
+        if self.logdebug:
+            cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
+            self.light_classifier.get_classification(cv_image)
+        else:
+            self.publish_upcoming_red_light()
 
     def get_closest_waypoint(self, x, y):
         """Identifies the closest path waypoint to the given position

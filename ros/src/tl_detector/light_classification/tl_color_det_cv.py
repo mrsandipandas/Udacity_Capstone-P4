@@ -3,7 +3,7 @@ import cv2
 from styx_msgs.msg import TrafficLight
 import rospy
 
-class TLColorDetectorCV(object):
+class TLColorDetectorCV():
   def __init__(self, debug):
     self.debug = debug
 
@@ -55,7 +55,7 @@ class TLColorDetectorCV(object):
     circles = cv2.HoughCircles(blurred_image, 
                                cv2.HOUGH_GRADIENT, 1, 100,
                                param1=50, param2=15,
-                               minRadius=3, maxRadius=40)
+                               minRadius=4, maxRadius=40)
 
     """
     # Loop over all detected circles and outline them on the original image (commented out)
@@ -68,9 +68,9 @@ class TLColorDetectorCV(object):
     prediction = TrafficLight.UNKNOWN
     
     if self.debug:
-      cv2.namedWindow('Live', cv2.WINDOW_NORMAL)
+      cv2.namedWindow('Debug', cv2.WINDOW_NORMAL)
       cv2.startWindowThread()
-
+    
     if circles is not None:
       for current_circle in circles[0,:]:
         """
@@ -92,10 +92,10 @@ class TLColorDetectorCV(object):
           
           if self.debug:
             cv2.circle(image, (center_x, center_y), radius, (0, 255, 0), 2)
-            cv2.imshow('Live', image)
+            cv2.imshow('Debug', image)
             cv2.waitKey(1)
     else:
       if self.debug:
-        cv2.imshow('Live', image)
+        cv2.imshow('Debug', image)
         cv2.waitKey(1)
     return prediction

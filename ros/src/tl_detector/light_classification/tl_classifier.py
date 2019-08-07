@@ -4,8 +4,8 @@ from tl_color_det_dl import TLColorDetectorDL
 
 class TLClassifier(object):
 
-    def __init__(self, method):
-        self.debug = False
+    def __init__(self, method, debug):
+        self.debug = debug
 
         if method == "comp_vision":
             self.model = TLColorDetectorCV(self.debug)
@@ -23,6 +23,7 @@ class TLClassifier(object):
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
         """
+        
         result = self.model.predict(image)
         if result is not None:
             return result
