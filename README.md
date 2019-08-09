@@ -73,8 +73,9 @@ roslaunch launch/site.launch
 ```
 5. Confirm that traffic light detection works on real life images. If you want to debug and visualize the image processing results from the ros logs, change `ros/src/tl_detector/tl_detector.py` as follows:
 ```
-self.logdebug = True
+self.debug = True
 ```
+6. I initially tried with the normal open cv iltering methods to detect a circular traffic light. However, due to the logs which I received from the reviewer I changed to Deep Learning method. I have used a pre-trained classfier from [Tensorflow detection model zoo](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/detection_model_zoo.md).
 
 ### Other library/driver information
 Outside of `requirements.txt`, here is information on other driver/library versions used in the simulator and Carla:

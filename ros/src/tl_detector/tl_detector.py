@@ -18,8 +18,7 @@ class TLDetector(object):
     def __init__(self):
         rospy.init_node('tl_detector')
         
-        self.logdebug = False
-        self.simdebug = False
+        self.debug = False
         
         self.has_image = False
         self.pose = None
@@ -40,7 +39,7 @@ class TLDetector(object):
         rely on the position of the light and the camera image to predict it.
         '''
         sub3 = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb)
-        sub6 = rospy.Subscriber('/image_raw', Image, self.image_cb)
+        sub6 = rospy.Subscriber('/image_color', Image, self.image_cb)
 
         config_string = rospy.get_param("/traffic_light_config")
         self.config = yaml.load(config_string)
@@ -48,11 +47,6 @@ class TLDetector(object):
         self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
 
         self.bridge = CvBridge()
-
-        debug = self.simdebug or self.logdebug
-
-        self.light_classifier = TLClassifier("comp_vision", debug)
-        #self.light_classifier = TLClassifier("deepl_learning")
         
         self.listener = tf.TransformListener()
 
@@ -60,6 +54,9 @@ class TLDetector(object):
         self.last_state = TrafficLight.UNKNOWN
         self.last_wp = -1
         self.state_count = 0
+
+        #self.light_classifier = TLClassifier("comp_vision", self.debug)
+        self.light_classifier = TLClassifier("deepl_learning", self.debug)
 
         rospy.spin()
 
@@ -75,8 +72,8 @@ class TLDetector(object):
     def traffic_cb(self, msg):
         self.lights = msg.lights
         
-        # If no image from camera and if not ros bag log debugging
-        if(not self.has_image and not self.logdebug):
+        # If camera not selected in simulator
+        if(not self.has_image):
             self.publish_upcoming_red_light()
 
     def publish_upcoming_red_light(self):
@@ -110,15 +107,8 @@ class TLDetector(object):
 
         """
         self.has_image = True
-        self.camera_image = msg
-        
-        # Just see how image processing works without the way points 
-        # for debugging the ros bags
-        if self.logdebug:
-            cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
-            self.light_classifier.get_classification(cv_image)
-        else:
-            self.publish_upcoming_red_light()
+        self.camera_image = msg   
+        self.publish_upcoming_red_light()
 
     def get_closest_waypoint(self, x, y):
         """Identifies the closest path waypoint to the given position
@@ -177,24 +167,24 @@ class TLDetector(object):
             car_wp_idx = self.get_closest_waypoint(self.pose.pose.position.x, self.pose.pose.position.y)
 
             # Find the closest visible traffic light (if one exists)
-            diff = len(self.waypoints.waypoints)
+            wayp_len = len(self.waypoints.waypoints)
 
             for i, light in enumerate(self.lights):
-                    # Get stop line waypoint index
-                    line = stop_line_positions[i]
-                    temp_wp_idx = self.get_closest_waypoint(line[0], line[1])
-                    # Find closest stop line waypoint index
-                    d = temp_wp_idx - car_wp_idx
-                    if d >= 0 and d < diff:
-                        diff = d
-                        closest_light = light
-                        line_wp_idx = temp_wp_idx
+                # Get stop line waypoint index
+                line = stop_line_positions[i]
+                temp_wp_idx = self.get_closest_waypoint(line[0], line[1])
+                # Find closest stop line waypoint index
+                d = temp_wp_idx - car_wp_idx
+                if d >= 0 and d < wayp_len:
+                    wayp_len = d
+                    closest_light = light
+                    line_wp_idx = temp_wp_idx
 
         if closest_light:
             state = self.get_light_state(closest_light)
             return line_wp_idx, state
         
-        self.waypoints = None
+        #self.waypoints = None
         return -1, TrafficLight.UNKNOWN
 
 if __name__ == '__main__':

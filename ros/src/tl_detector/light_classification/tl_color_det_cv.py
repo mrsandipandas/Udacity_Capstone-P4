@@ -2,12 +2,18 @@ import numpy as np
 import cv2
 from styx_msgs.msg import TrafficLight
 import rospy
+import os
 
-class TLColorDetectorCV():
+
+class TLColorDetectorCV(object):
   def __init__(self, debug):
     self.debug = debug
+    #self.count = 0
 
   def predict(self, image):
+
+    '''cv2.imwrite(os.path.join("/media/student/Data/test", "" "frame%06i.png" % self.count), image)
+    self.count = self.count + 1'''
     """
     image: cv2.Image (BGR)
     Reference: https://github.com/sol-prog/OpenCV-red-circle-detection.
@@ -87,10 +93,10 @@ class TLColorDetectorCV():
         """
         # if ratio is larger than a threshold report as RED
         """
-        if ratio > 0.30:
-          prediction = TrafficLight.RED
-          
+        if ratio > 0.35:
+          prediction = TrafficLight.RED   
           if self.debug:
+            # print ('Detected')
             cv2.circle(image, (center_x, center_y), radius, (0, 255, 0), 2)
             cv2.imshow('Debug', image)
             cv2.waitKey(1)
